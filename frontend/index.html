@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="index.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body onload="fetchData()">
+<div class="container">
+    <div class="input_field">
+        <input maxlength="300" placeholder="Место" id='where' class="input"/>
+        <input maxlength="10" placeholder="Цена" id='howMany' class="input" type="number"/>
+        <button onclick="addSpend()" class="button_add"> ></button>
+    </div>
+    <div class="all_spends" id='all_spends'>
+    </div>
+</div>
+<div class="notify">
+    <span>Клик по полю</span>
+    <span>Открыть окно редактирования</span>
+    <span>Enter при открытом редактировании</span>
+    <span>Сохранить изменения</span>
+    <span>Клик вне поля при открытом редактировании</span>
+    <span>Отменить изменения</span>
+</div>
+<script src="js/index.js"></script>
+</body>
+</html>
