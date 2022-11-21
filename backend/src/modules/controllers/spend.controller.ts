@@ -1,4 +1,4 @@
-import {Spend, ISpend} from '../../db/models/spend/spend.schema'
+import {ISpend, Spend} from '../../db/models/spend/spend.schema'
 import {Request, Response} from "express";
 import {Error} from "mongoose";
 
@@ -54,6 +54,7 @@ const updateSpend = (req: Request, res: Response): void => {
   }
 
 }
+
 
 const deleteSpend = (req: Request, res: Response): void => {
   try {

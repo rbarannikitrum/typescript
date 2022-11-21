@@ -15,30 +15,30 @@ interface IHeaders {
 ////////////////////
 ////////////////////
 
-class BaseClass {
-    total: number
-    spendArr: Array<ISpendObj>
-    spends: HTMLElement
-    private serverError: string
-    public userError: string
-    headers
+interface IBase {
+    total : number
+    spendArr : Array<ISpendObj>
+    spends : HTMLElement
+    serverError: string
+    userError: string
+    headers : IHeaders
+}
 
-    constructor() {
-        this.total = 0
-        this.spendArr = []
-        this.spends = document.querySelector('#all_spends') as HTMLElement
-        this.serverError = 'Ошибка в получении данных с сервера'
-        this.userError = 'Введите корректные данные'
-        this.headers = {"Content-Type": "application/json;charset=utf-8", "Access-Control-Allow-Origin": "*"}
-    }
+abstract class BaseClass implements IBase{
+    total: number = 0
+    spendArr: Array<ISpendObj> = []
+    spends: HTMLElement = document.querySelector('#all_spends') as HTMLElement
+    serverError: string = 'Ошибка в получении данных с сервера'
+    userError: string = 'Введите корректные данные'
+    headers: IHeaders = {"Content-Type": "application/json;charset=utf-8", "Access-Control-Allow-Origin": "*"}
 }
 
 class FetchMethods extends BaseClass {
-    constructor() {
+     constructor() {
         super();
     }
 
-    static async get(): Promise<Array<ISpendObj>> {
+    async get(): Promise<Array<ISpendObj>> {
         return await fetch('http://localhost:8000/allSpends',
             {
                 method: 'GET'
@@ -46,7 +46,7 @@ class FetchMethods extends BaseClass {
 
     }
 
-    static async add(where: string, howMany: number): Promise<ISpendObj> {
+     async add(where: string, howMany: number): Promise<ISpendObj> {
         return await fetch('http://localhost:8000/create', {
             method: 'POST',
             body: JSON.stringify({place: where, price: howMany}),
@@ -54,7 +54,7 @@ class FetchMethods extends BaseClass {
         }).then(res => res.json()).then(res => res.data)
     }
 
-    static async patch(i: number): Promise<ISpendObj> {
+     async patch(i: number): Promise<ISpendObj> {
         return await fetch('http://localhost:8000/update', {
             method: 'PATCH',
             body: JSON.stringify({
@@ -68,12 +68,33 @@ class FetchMethods extends BaseClass {
         }).then(res => res.json())
     }
 
-    static async delete(id: string): Promise<boolean> {
+     async delete(id: string): Promise<boolean> {
         const response = await fetch(`http://localhost:8000/delete?_id=${id}`, {method: 'DELETE'})
         return response.status === 200;
     }
 }
 
+const fetchMethods: FetchMethods = new FetchMethods()
+
+class TaskActions extends BaseClass {
+    async addSpend(): Promise<void> {
+        let howMany: number = Number((document.querySelector('#howMany') as HTMLInputElement).value)
+        howMany = Number(howMany.toFixed(2))
+        let where: string = (document.querySelector('#where') as HTMLInputElement).value.trim()
+        if (!where || !howMany || howMany > 9999999 || howMany <= 0) {
+            return setError(userError)
+        }
+        try {
+            await fetchMethods.add(where, howMany)
+            spendArr = await fetchMethods.get()
+            render()
+        } catch (error) {
+            setError(serverError)
+        }
+        (document.querySelector('#where') as HTMLInputElement).value = '';
+        (document.querySelector('#howMany') as HTMLInputElement).value = ''
+    }
+}
 
 ////////////////////
 ////////////////////
@@ -82,7 +103,12 @@ class FetchMethods extends BaseClass {
 
 let total: number = 0
 let spendArr: ISpendObj[] = [];
-const spends: HTMLElement = document.querySelector('#all_spends') as HTMLElement
+const spends = document.querySelector<HTMLInputElement>('#all_spends')
+let spendsValue
+if (spends) {
+     spendsValue = spends.value
+}
+
 const serverError: string = 'Ошибка в получении данных с сервера'
 const userError: string = 'Введите корректные данные'
 const headers: IHeaders = {"Content-Type": "application/json;charset=utf-8", "Access-Control-Allow-Origin": "*"}
@@ -126,7 +152,7 @@ async function deleteReq(id: string): Promise<boolean> {
 async function fetchData(): Promise<void> {
     try {
         setLoader()
-        spendArr = await FetchMethods.get()
+        spendArr = await fetchMethods.get()
         render()
     } catch (error) {
         setError(serverError)
@@ -144,8 +170,8 @@ async function addSpend(): Promise<void> {
         return setError(userError)
     }
     try {
-        await FetchMethods.add(where, howMany)
-        spendArr = await FetchMethods.get()
+        await fetchMethods.add(where, howMany)
+        spendArr = await fetchMethods.get()
         render()
     } catch (error) {
         setError(serverError)
@@ -187,8 +213,8 @@ async function saveChangesForAll(i: number): Promise<void> {
                 checkVar.time = editTimeInput
                 checkVar.price = editPriceInput
             }
-            await FetchMethods.patch(i)
-            spendArr = await FetchMethods.get()
+            await fetchMethods.patch(i)
+            spendArr = await fetchMethods.get()
             render()
         } catch (error) {
             setError(serverError)
@@ -238,8 +264,8 @@ async function saveChanges(elem: string): Promise<void> {
 
 
     try {
-        await FetchMethods.patch(i)
-        spendArr = await FetchMethods.get()
+        await fetchMethods.patch(i)
+        spendArr = await fetchMethods.get()
         render()
     } catch (error) {
         setError(serverError)
@@ -249,8 +275,8 @@ async function saveChanges(elem: string): Promise<void> {
 // удалить задачу
 async function deleteElement(id: string): Promise<void> {
     try {
-        await FetchMethods.delete(id)
-        spendArr = await FetchMethods.get()
+        await fetchMethods.delete(id)
+        spendArr = await fetchMethods.get()
         render()
     } catch (error) {
         setError(serverError)
@@ -291,7 +317,7 @@ function setEdit(elem: string) {
     task.appendChild(input)
     task.addEventListener('focusout', () => render())
 
-    input.addEventListener('keyup', async (event) => {
+    input.addEventListener('keyup', async (event: KeyboardEvent) => {
         if (event.keyCode === 13) {
             event.preventDefault()
             await saveChanges(elem)
@@ -369,7 +395,9 @@ function setLoader() {
     const ring = document.createElement('div')
     ring.id = 'ring'
     ring.classList.add('lds-ring')
-    spends.before(ring)
+    if(spends) {
+        spends.before(ring)
+    }
 
     let firstDiv = document.createElement('div')
     ring.appendChild(firstDiv)
@@ -392,7 +420,7 @@ function deleteLoader() {
     }
 
 }
-
+// создание ошибки
 function setError(error: string) {
     if (!document.querySelector('.error')) {
         const errorDiv = document.createElement('div')
@@ -400,7 +428,9 @@ function setError(error: string) {
         const errorText = document.createElement('span')
         errorText.textContent = error
         errorDiv.appendChild(errorText)
-        spends.prepend(errorDiv)
+        if (spends) {
+            spends.prepend(errorDiv)
+        }
         setTimeout(() => {
             errorDiv.remove()
         }, 5000)
@@ -421,13 +451,17 @@ function checkEmpty() {
         const emptyText = document.createElement('span')
         emptyText.textContent = 'Список трат пуст'
         emptyDiv.appendChild(emptyText)
-        spends.appendChild(emptyDiv)
+        if (spends) {
+            spends.appendChild(emptyDiv)
+        }
     }
 }
 
 // рендер
 function render() {
-    spends.innerHTML = ''
+    if (spends) {
+        spends.innerHTML = ''
+    }
     const sum = document.createElement('div')
     sum.classList.add('sum')
     reduceTotal()
@@ -500,7 +534,10 @@ function render() {
         })
 
         // див со всеми задачами
-        spends.appendChild(container)
-        spends.appendChild(sum)
+        if (spends) {
+            spends.appendChild(container)
+            spends.appendChild(sum)
+        }
+
     })
 }
