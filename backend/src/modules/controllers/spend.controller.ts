@@ -44,7 +44,8 @@ const updateSpend = (req: Request, res: Response): void => {
     ) {
       Spend.findByIdAndUpdate(_id, {place, time, price}).then(result => res.send(result))
     } else res.status(400).send('uncorrected data')
-  } catch (error: any) {
+  }
+  catch (error: any) {
     if (error instanceof Error) {
       res.status(500).send({message: error.message})
     }

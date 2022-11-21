@@ -35,10 +35,6 @@ const getAllSpends = (req, res) => {
     catch (error) {
         res.status(500).send(`server error : ${error}`);
     }
-    let a = 5;
-    let b = 'asas';
-    a = b;
-    console.log(a);
 };
 exports.getAllSpends = getAllSpends;
 const updateSpend = (req, res) => {
